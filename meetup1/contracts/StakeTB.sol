@@ -7,7 +7,7 @@ import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
 contract StakeTB{
     IERC20 _token;
-    mapping(address => stakeInfo) _addressToToken;
+    mapping(address => stakeInfo) _addressToStakeInfo;
     uint256 _rewardRatePerSecond = 1 * 10**16;
 
 
@@ -21,7 +21,7 @@ contract StakeTB{
     }
 
     function stake(uint256 amount) public {
-        stakeInfo memory oldInfo = _addressToToken[msg.sender];
+        stakeInfo memory oldInfo = _addressToStakeInfo[msg.sender];
         if (oldInfo.amount > 0){
             uint256 rewardAmount = calcReward(oldInfo);
             _token.transfer(msg.sender, rewardAmount);
@@ -29,11 +29,11 @@ contract StakeTB{
         // emit event
         _token.transferFrom(msg.sender, address(this), amount);
         stakeInfo memory newInfo = stakeInfo(amount + oldInfo.amount, block.timestamp);
-        _addressToToken[msg.sender] = newInfo;
+        _addressToStakeInfo[msg.sender] = newInfo;
     }
 
     function harvest() public {
-        stakeInfo memory info = _addressToToken[msg.sender];
+        stakeInfo memory info = _addressToStakeInfo[msg.sender];
         uint256 rewardAmount = calcReward(info);
         _token.transfer(msg.sender, rewardAmount);
     }
@@ -43,13 +43,13 @@ contract StakeTB{
     }
 
     function unstake() public {
-        stakeInfo memory info = _addressToToken[msg.sender];
+        stakeInfo memory info = _addressToStakeInfo[msg.sender];
         require(info.amount > 0, "You haven't staked any coins yet.");
 
         _token.transfer(msg.sender, info.amount + calcReward(info));
     }
 
     function stakedAmount() public view returns(uint256){
-        return _addressToToken[msg.sender].amount;
+        return _addressToStakeInfo[msg.sender].amount;
     }
 }
